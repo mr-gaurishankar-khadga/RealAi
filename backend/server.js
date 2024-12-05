@@ -16,7 +16,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 app.use(bodyParser.json());
 
 app.use(cors({
-  origin: process.env.Frontend_netlify, 
+  origin: '*', 
 }));
 
 
