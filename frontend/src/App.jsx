@@ -13,18 +13,18 @@ const App = () => {
   const messagesEndRef = useRef(null);
 
 
-  const [animationDuration, setAnimationDuration] = useState(3); // Default duration in seconds
-  const lastTypedTime = useRef(Date.now()); // Use ref to store the last typed time
+  const [animationDuration, setAnimationDuration] = useState(3); 
+  const lastTypedTime = useRef(Date.now()); 
 
   const handleInputChange = () => {
     const currentTime = Date.now();
-    const typingInterval = currentTime - lastTypedTime.current; // Time since last keystroke
+    const typingInterval = currentTime - lastTypedTime.current; 
 
-    // Calculate animation duration (clamp between 0.5s and 5s)
+ 
     const newDuration = Math.max(0.5, Math.min(5, typingInterval / 100));
 
-    setAnimationDuration(newDuration); // Update state
-    lastTypedTime.current = currentTime; // Update last typed time
+    setAnimationDuration(newDuration); 
+    lastTypedTime.current = currentTime; 
   };
 
 
@@ -74,7 +74,7 @@ const App = () => {
       console.error('Error:', error);
       const errorMessage = {
         type: 'bot',
-        content: 'Sorry, I encountered an error. Please try again.'
+        content: 'Sorry.'
       };
       setMessages(prev => [...prev, errorMessage]);
     }
