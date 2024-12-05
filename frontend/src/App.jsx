@@ -4,39 +4,53 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { IoSendSharp } from "react-icons/io5";
+import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import './App.css';
 
 const App = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const [animationDuration, setAnimationDuration] = useState(3);
+  const lastTypedTime = useRef(Date.now());
 
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        setInput(transcript);
+      };
 
-  const [animationDuration, setAnimationDuration] = useState(3); 
-  const lastTypedTime = useRef(Date.now()); 
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
 
   const handleInputChange = () => {
     const currentTime = Date.now();
-    const typingInterval = currentTime - lastTypedTime.current; 
-
- 
+    const typingInterval = currentTime - lastTypedTime.current;
     const newDuration = Math.max(0.5, Math.min(5, typingInterval / 100));
-
-    setAnimationDuration(newDuration); 
-    lastTypedTime.current = currentTime; 
+    setAnimationDuration(newDuration);
+    lastTypedTime.current = currentTime;
   };
-
-
-
-
-
-
-
-
-
-
-
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -45,6 +59,15 @@ const App = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+    setIsListening(!isListening);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,9 +122,6 @@ const App = () => {
             {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        
-
-
         <SyntaxHighlighter 
           language={language} 
           style={atomDark}
@@ -151,28 +171,25 @@ const App = () => {
   return (
     <div className="app">
       <header 
-      className="header" 
-      style={{
-        position: 'fixed', 
-        backgroundColor: 'rgb(30,33,35)', 
-        width: '100%', 
-        top: '3%', 
-        left: '50%', 
-        transform: 'translate(-50%, -50%)', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        zIndex: 1000,
-        padding: '20px',
-        fontSize: '2rem',
-      }}
-    >
-  <h1>gshankar ai</h1>
-</header>
+        className="header" 
+        style={{
+          position: 'fixed', 
+          backgroundColor: 'rgb(30,33,35)', 
+          width: '100%', 
+          top: '3%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          zIndex: 1000,
+          padding: '20px',
+          fontSize: '2rem',
+        }}
+      >
+        <h1>gshankar ai</h1>
+      </header>
 
-
-
-{/* style={{marginTop:'100px'}} */}
       <main className="main" style={{margin:'0'}}>
         <div className="chat-container">
           {messages.map((message, index) => (
@@ -194,37 +211,50 @@ const App = () => {
         </div>
       </main>
 
+      <form onSubmit={handleSubmit} className="input-form">
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="What You Want to Search"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+          rows={1}
+          onInput={handleInputChange}
+          style={{
+            animationDuration: `${animationDuration}s`,
+          }}
+          className="message-input"
+        />
+
+        <button
+          type="button"
+          onClick={toggleListening}
+          className="voice-button"
+          style={{
+            backgroundColor: '#1c1e25',
+            border: 'none',
+            cursor: 'pointer',
+            marginRight: '5px',
+            color: isListening ? '#ff4444' : '#ffffff',
+            backgroundColor:'#2d2d2d'
+          }}
+        >
+          {isListening ? <FaMicrophoneSlash size={24} /> : <FaMicrophone size={24} />}
+        </button>
 
 
-
-        <form onSubmit={handleSubmit} className="input-form">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="What You Want to Search"
-
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-            rows={1}
-
-            onInput={handleInputChange}
-              style={{
-              animationDuration: `${animationDuration}s`,
-            }}
-            className="message-input"
-          />
-          <button 
-            type="submit" 
-            disabled={isLoading || !input.trim()}
-            className="send-button"
-          >
-            <IoSendSharp style={{fontSize:30}}/>
-          </button>
-        </form>
+        <button 
+          type="submit" 
+          disabled={isLoading || !input.trim()}
+          className="send-button"
+        >
+          <IoSendSharp className='sendicon'/>
+        </button>
+      </form>
     </div>
   );
 };

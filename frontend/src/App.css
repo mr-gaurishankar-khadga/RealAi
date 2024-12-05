@@ -42,6 +42,8 @@ body {
   align-items: center;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  /* background-color: red; */
 }
 
 
@@ -73,22 +75,20 @@ body {
   position: fixed;
   width: 1000px;
   max-width: 2000px;
-
   max-height: 100vh; 
   box-sizing: border-box; 
-  /* padding: 20px; */
   padding-bottom: 100px;
 }
 
 @media (max-width: 768px) {
   .chat-container {
     flex: 1;
-    overflow-y: auto; 
+    /* overflow-y: auto;  */
     padding-top: 5rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    /* background-color: green; */
+    /* background-color: rgb(82, 49, 246); */
     position: fixed;
     width: 380px;
     max-width: 500px;
@@ -97,6 +97,8 @@ body {
     box-sizing: border-box; 
     padding-bottom: 100px;
     margin-left: -10px;
+    /* overflow-y: hidden; */
+    overflow-x: hidden;
   }
 }
 
@@ -111,18 +113,27 @@ body {
   animation: slideIn 0.3s ease-out;
   padding: 1rem;
   border-radius: 0.5rem;
-  /* background-color: red; */
+  background-color: red;
 }
 
 .user-message {
   background-color: rgb(30,3,35);
 }
 
+
+/* //selecting all content  */
 .bot-message {
   text-align: left;
   margin: 0;
-  /* background-color: black; */
-  /* background-color: red; */
+  background-color: black;
+  /* margin-left: 23px; */
+}
+
+@media (max-width: 768px) {
+  .bot-message {
+    margin-left: 0;
+
+  }
 }
 
 .avatar {
@@ -136,18 +147,27 @@ body {
   /* background-color: #e5e5e5; */
 }
 
+
+/* this is for content of any answer basically text */
 .message-content {
   flex: 1;
   line-height: 1.5;
+  /* background-color: red; */
+  margin-left: -5px;
+  /* padding-right: 10px; */
+  /* position: fixed; */
 }
 
 .code-block {
   border-radius: 4px;
   overflow: hidden;
   padding: 10px;
-  margin-left: -60px;
+  margin-left: -47px;
   width: 960px;
   max-width: 2000px;
+  margin-top: 30px;
+  /* background-color: rgb(34, 24, 24); */
+  /* margin-left: 10px; */
 }
 
 @media (max-width: 768px) {
@@ -158,6 +178,8 @@ body {
     margin-left: -50px;
     width: 350px;
     max-width: 2000px;
+    margin-top: 30px;
+    background-color: black;
   }
 }
 
@@ -232,7 +254,7 @@ body {
   margin-left: -300px;
   height: 50px;
   min-width: 700px;
-  position: fixed;
+  position: fixed;  
 }
 
 
@@ -345,6 +367,17 @@ body {
   cursor: not-allowed;
 }
 
+@media (max-width: 768px) {
+  .send-button {
+    padding: 0.75rem 1.2rem;
+    padding-right: 10px;
+  }
+}
+
+
+
+
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -379,7 +412,7 @@ body {
 }
 
 .message-content code {
-  /* background-color: rgb(30,33,35); */
+  background-color: rgb(30,33,35);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-size: 0.9em;
@@ -388,6 +421,32 @@ body {
 
 
 
+.sendicon {
+  font-size: 30px;
+}
+
+@media (max-width: 768px) {
+  .sendicon {
+    font-size: 25px;
+    margin-right: 10px;
+  }
+}
+
+
+
+
+.voice-button {
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.voice-button:hover {
+  opacity: 0.8;
+}
+
+.voice-button:active {
+  transform: scale(0.95);
+}
 
 
 
