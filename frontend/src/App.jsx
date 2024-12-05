@@ -60,7 +60,7 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/generate', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}`, {
         prompt: input
       });
 

@@ -4,15 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "build": "vite build",
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d dist"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
-
-
   "dependencies": {
     "@mui/icons-material": "^6.1.9",
     "axios": "^1.7.8",
+    "dotenv": "^16.4.7",
     "gsharpi": "^2.0.1",
     "lucide-react": "^0.464.0",
     "react": "^18.3.1",
