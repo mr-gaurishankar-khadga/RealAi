@@ -245,8 +245,8 @@ body {
     margin-top: 150px;
     margin-left: 0;
     height: 50px;
-    min-width: 350px;
-    margin-left: -80px;
+    min-width: 340px;
+    margin-left: -60px;
     position: fixed;
   } 
 }
