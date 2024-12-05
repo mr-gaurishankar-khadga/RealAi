@@ -16,7 +16,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 app.use(bodyParser.json());
 
 app.use(cors({
-  origin: ['https://mrxai.netlify.app', 'http://localhost:5173'], 
+  origin: ['https://maxxxai.netlify.app', 'http://localhost:5173'], 
 }));
 
 
