@@ -6,14 +6,19 @@ const bodyParser = require('body-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
+
 const port = process.env.PORT;
 
-app.use(cors());
 
 const apiKey = process.env.GOOGLE_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 
 app.use(bodyParser.json());
+
+app.use(cors({
+  origin: process.env.Frontend_URL, 
+}));
+
 
 app.post('/generate', async (req, res) => {
   const { prompt } = req.body;
