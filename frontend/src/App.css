@@ -242,10 +242,10 @@ body {
     background-color: 29, 31, 33;
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-top: 0;
+    margin-top: 150px;
     margin-left: 0;
     height: 50px;
-    min-width: 390px;
+    min-width: 350px;
     margin-left: -80px;
     position: fixed;
   } 
