@@ -1,0 +1,444 @@
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  /* background-color: red; */
+  text-align: center;
+  justify-content: center;
+}
+
+
+.app {
+  height: 100%;
+  /* width: 100%; */
+  display: flex;
+  flex-direction: column;
+  /* width: 100%; */
+}
+
+.header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e5e5;
+  text-align: center;
+  min-width: 300px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+  color: white;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  /* flex-direction: column; */
+  margin: 0 auto;
+  /* padding: 2rem; */
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+
+
+
+
+@media (max-width: 768px) {
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    min-width: 225px;
+    overflow: hidden;
+  }
+}
+
+
+
+
+.chat-container {
+  flex: 1;
+  overflow-y: auto; 
+  padding-top: 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  /* background-color: green; */
+  position: fixed;
+  width: 1000px;
+  max-width: 2000px;
+
+  max-height: 100vh; 
+  box-sizing: border-box; 
+  padding-bottom: 100px;
+}
+
+@media (max-width: 768px) {
+  .chat-container {
+    flex: 1;
+    overflow-y: auto; 
+    padding-top: 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    /* background-color: green; */
+    position: fixed;
+    width: 400px;
+    max-width: 500px;
+  
+    max-height: 100vh; 
+    box-sizing: border-box; 
+    padding-bottom: 100px;
+  }
+}
+
+
+
+
+
+.message {
+  margin-top: 10px;
+  display: flex;
+  gap: 1rem;
+  animation: slideIn 0.3s ease-out;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  /* background-color: red; */
+}
+
+.user-message {
+  background-color: rgb(30,3,35);
+}
+
+.bot-message {
+  text-align: left;
+  margin: 0;
+  background-color: rgb(30,33,35);
+  /* background-color: red; */
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background-color: #e5e5e5;
+}
+
+.message-content {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.code-block {
+  border-radius: 4px;
+  overflow: hidden;
+  padding: 10px;
+  margin-left: -55px;
+  width: 960px;
+  max-width: 2000px;
+}
+
+@media (max-width: 768px) {
+  .code-block {
+    border-radius: 4px;
+    overflow: hidden;
+    padding: 10px;
+    margin-left: -70px;
+    width: 385px;
+    max-width: 2000px;
+  }
+}
+
+
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #2d2d2d;
+  color: #fff;
+}
+
+.language {
+  font-size: 0.875rem;
+  color: #999;
+}
+
+.copy-button {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #444;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+  background-color: #555;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background-color: #999;
+  border-radius: 50%;
+  animation: bounce 1s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+
+
+
+.input-form {
+  display: flex;
+  gap: 0.5rem;
+  background-color: 29, 31, 33;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 250px;
+  margin-left: -300px;
+  height: 50px;
+  min-width: 700px;
+  position: fixed;
+}
+
+
+@media (max-width: 768px) {
+  .input-form {
+    display: flex;
+    gap: 0.5rem;
+    background-color: 29, 31, 33;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 380px;
+    margin-left: 0;
+    height: 50px;
+    min-width: 390px;
+    margin-left: -80px;
+    position: fixed;
+  } 
+}
+
+
+
+
+
+
+
+
+
+
+.message-input {
+  flex: 1;
+  padding: 0.65rem;
+  /* border: 4px solid transparent;  */
+  border-radius: 120px;
+  resize: none;
+  font-family: inherit;
+  font-size: 1rem;
+  min-height: 20px;
+  max-height: 200px;
+  outline: none;
+
+  background: linear-gradient(90deg, #007bff, #ff007b, #00ff77, #007bff);
+
+  background-size: 300% 100%; 
+
+  background-clip: border-box; 
+
+  -webkit-background-clip: border-box;
+
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+
+  animation: smooth-border-animation 3s linear infinite;
+}
+
+.message-input:hover {
+  box-shadow: 0 0 12px rgba(0, 123, 255, 0.5); 
+}
+
+.message-input:focus {
+  box-shadow: 0 0 15px rgba(255, 0, 123, 0.5);
+}
+
+@keyframes smooth-border-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.send-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #2d2d2d ;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.send-button:hover:not(:disabled) {
+  background-color: #1c1e25;
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+
+.message-content p {
+  margin: 0 0 1rem 0;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.message-content pre {
+  margin: 0;
+}
+
+.message-content code {
+  background-color: rgb(30,33,35);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #999;
+}
+
+
+
