@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT;
 
 app.use(cors());
 
