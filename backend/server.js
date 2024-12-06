@@ -18,18 +18,22 @@ app.use(cors({
   origin: ['https://maxxxxxai.netlify.app', 'http://localhost:5173'],
 }));
 
-// Helper function to convert base64 to Uint8Array
-function base64ToUint8Array(base64String) {
-  const base64WithoutPrefix = base64String.replace(/^data:image\/\w+;base64,/, '');
-  const binaryString = atob(base64WithoutPrefix);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
+// Function to extract mime type from data URL
+function getMimeType(dataUrl) {
+  const matches = dataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/);
+  return matches && matches.length > 1 ? matches[1] : 'image/jpeg';
 }
 
-// Text-only generation endpoint
+// Function to process image data URL
+function processImageData(dataUrl) {
+  const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+  return {
+    mimeType: getMimeType(dataUrl),
+    data: base64Data
+  };
+}
+
+// Text generation endpoint
 app.post('/generate', async (req, res) => {
   const { prompt } = req.body;
 
@@ -40,13 +44,9 @@ app.post('/generate', async (req, res) => {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(prompt);
-
-    if (result && result.response && typeof result.response.text === 'function') {
-      const generatedText = await result.response.text();
-      return res.json({ generatedText });
-    } else {
-      return res.status(500).json({ error: "Failed to generate content" });
-    }
+    const response = await result.response;
+    const generatedText = response.text();
+    return res.json({ generatedText });
   } catch (error) {
     console.error("Error generating content:", error);
     return res.status(500).json({ error: "Server error" });
@@ -55,39 +55,52 @@ app.post('/generate', async (req, res) => {
 
 // Image analysis endpoint
 app.post('/analyze-image', async (req, res) => {
-  const { image, prompt = "Analyze this image and describe what you see in detail." } = req.body;
-
-  if (!image) {
-    return res.status(400).json({ error: "Image data is required" });
-  }
-
   try {
-    // Convert base64 image to Uint8Array
-    const imageData = base64ToUint8Array(image);
+    const { image } = req.body;
+    
+    if (!image) {
+      return res.status(400).json({ error: "Image data is required" });
+    }
 
-    // Get the vision model
+    // Process the image data
+    const processedImage = processImageData(image);
+    
+    // Initialize the vision model
     const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
 
-    // Prepare the image parts
-    const imageParts = [
-      {
-        inlineData: {
-          data: Buffer.from(imageData).toString('base64'),
-          mimeType: "image/jpeg"
-        }
+    // Prepare the image part
+    const imagePart = {
+      inlineData: {
+        data: processedImage.data,
+        mimeType: processedImage.mimeType
       }
-    ];
+    };
 
-    // Generate content with the image
-    const result = await model.generateContent([prompt, ...imageParts]);
+    // Prepare the prompt
+    const prompt = "Please analyze this image and describe what you see in detail.";
+
+    // Generate content
+    const result = await model.generateContent([prompt, imagePart]);
     const response = await result.response;
     const analysis = response.text();
 
     return res.json({ analysis });
   } catch (error) {
-    console.error("Error analyzing image:", error);
-    return res.status(500).json({ error: "Failed to analyze image" });
+    console.error("Error analyzing image:", error.message);
+    return res.status(500).json({ 
+      error: "Failed to analyze image", 
+      details: error.message 
+    });
   }
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: "Something broke!", 
+    details: err.message 
+  });
 });
 
 app.listen(port, () => {

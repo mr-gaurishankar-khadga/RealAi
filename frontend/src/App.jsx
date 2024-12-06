@@ -196,24 +196,32 @@ const App = () => {
     }
   }, []);
 
-  const handleImageCapture = async (photo) => {
+  const handleImageCapture = async (imageDataUrl) => {
     setIsLoading(true);
     try {
-      const response = await axios.post('https://realai-tt.onrender.com/analyze-image', {
-        image: photo
+      const response = await axios.post('http://localhost:1000/analyze-image', {
+        image: imageDataUrl
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        maxBodyLength: Infinity,
       });
-
-      const botMessage = {
-        type: 'bot',
-        content: response.data.analysis
-      };
-
-      setMessages(prev => [...prev, botMessage]);
+  
+      if (response.data.analysis) {
+        const botMessage = {
+          type: 'bot',
+          content: response.data.analysis
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        throw new Error('No analysis received from the server');
+      }
     } catch (error) {
       console.error('Error analyzing image:', error);
       const errorMessage = {
         type: 'bot',
-        content: 'Sorry, I could not analyze the image.'
+        content: 'Sorry, I encountered an error while analyzing the image. Please try again.'
       };
       setMessages(prev => [...prev, errorMessage]);
     }
