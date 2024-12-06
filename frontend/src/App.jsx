@@ -196,30 +196,16 @@ const App = () => {
     }
   }, []);
 
-
-
-
-
-
-
-
-
-
   const handleImageCapture = async (imageDataUrl) => {
     setIsLoading(true);
     try {
-      // Validate image data URL
-      if (!imageDataUrl || !imageDataUrl.startsWith('data:image')) {
-        throw new Error('Invalid image data');
-      }
-  
-      const response = await axios.post('https://realai-tt.onrender.com/analyze-image', {
+      const response = await axios.post('http://localhost:1000/analyze-image', {
         image: imageDataUrl
       }, {
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: 30000 // 30 second timeout
+        maxBodyLength: Infinity,
       });
   
       if (response.data.analysis) {
@@ -229,21 +215,18 @@ const App = () => {
         };
         setMessages(prev => [...prev, botMessage]);
       } else {
-        throw new Error('No analysis received');
+        throw new Error('No analysis received from the server');
       }
     } catch (error) {
-      console.error('Image Analysis Error:', error);
+      console.error('Error analyzing image:', error);
       const errorMessage = {
         type: 'bot',
-        content: `Error: ${error.response?.data?.details || error.message || 'Failed to analyze image'}`
+        content: 'Sorry, I encountered an error while analyzing the image. Please try again.'
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
-
-
 
   const handleInputChange = () => {
     const currentTime = Date.now();
