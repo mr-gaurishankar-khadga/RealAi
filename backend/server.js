@@ -1,71 +1,56 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 1000;
 
-// Enhanced CORS configuration
+// More permissive CORS setup for development
 app.use(cors({
-  origin: '*', 
+  origin: '*', // During development, accept all origins
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Increase payload size limit
+// Increase payload limits
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Validate API key
-if (!process.env.GOOGLE_API_KEY) {
-  console.error('GOOGLE_API_KEY is not set');
-  process.exit(1);
-}
+const apiKey = process.env.GOOGLE_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey);
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-
-// Health check endpoint
+// Basic health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok' });
 });
 
-// Image analysis endpoint with robust error handling
 app.post('/analyze-image', async (req, res) => {
   try {
     const { image } = req.body;
     
-    // Validate image data
-    if (!image || !image.startsWith('data:image')) {
-      return res.status(400).json({ 
-        error: "Invalid image data", 
-        message: "Please provide a valid base64 encoded image" 
-      });
+    if (!image) {
+      return res.status(400).json({ error: "Image data is required" });
     }
 
-    // Extract base64 and MIME type
-    const base64Match = image.match(/^data:image\/(\w+);base64,(.+)$/);
-    if (!base64Match) {
-      return res.status(400).json({ 
-        error: "Image format error", 
-        message: "Unable to parse image data" 
-      });
+    if (!apiKey) {
+      return res.status(500).json({ error: "API key not configured" });
     }
 
-    const [, mimeType, base64Data] = base64Match;
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    const mimeType = image.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)[1];
 
-    // Select appropriate model
     const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
 
-    // Generate content
-    const prompt = "Analyze this image in detail. Describe its contents, key elements, and provide insights.";
+    const prompt = "Please analyze this image and describe what you see in detail.";
     
     const result = await model.generateContent([
       prompt,
       {
         inlineData: {
           data: base64Data,
-          mimeType: `image/${mimeType}`
+          mimeType: mimeType
         }
       }
     ]);
@@ -73,75 +58,44 @@ app.post('/analyze-image', async (req, res) => {
     const response = await result.response;
     const analysis = response.text();
 
-    return res.json({ 
-      analysis, 
-      mimeType,
-      imageSize: `${base64Data.length / 1024} KB` 
-    });
-
+    return res.json({ analysis });
   } catch (error) {
-    console.error("Detailed Image Processing Error:", error);
-    
-    const errorResponse = {
-      error: "Image Analysis Failed",
-      details: error.message,
-      code: error.code || 'UNKNOWN_ERROR'
-    };
-
-    // Map different types of errors
-    if (error.message.includes('API key')) {
-      errorResponse.code = 'INVALID_API_KEY';
-      return res.status(401).json(errorResponse);
-    }
-
-    if (error.message.includes('quota') || error.message.includes('limit')) {
-      errorResponse.code = 'QUOTA_EXCEEDED';
-      return res.status(429).json(errorResponse);
-    }
-
-    return res.status(500).json(errorResponse);
-  }
-});
-
-// Text generation endpoint
-app.post('/generate', async (req, res) => {
-  try {
-    const { prompt } = req.body;
-
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt is required" });
-    }
-
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const generatedText = response.text();
-
-    return res.json({ generatedText });
-
-  } catch (error) {
-    console.error("Text Generation Error:", error);
+    console.error("Error processing image:", error);
     return res.status(500).json({ 
-      error: "Text generation failed", 
+      error: "Failed to analyze image", 
       details: error.message 
     });
   }
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found', path: req.path });
+app.post('/generate', async (req, res) => {
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt is required" });
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const generatedText = response.text();
+    return res.json({ generatedText });
+  } catch (error) {
+    console.error("Error generating content:", error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Unhandled Error:', err);
+  console.error(err);
   res.status(500).json({ 
-    error: "Unexpected server error", 
+    error: "Internal server error", 
     details: err.message 
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log(`Server is running at http://localhost:${port}`);
 });
