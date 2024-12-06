@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://your-frontend-domain.com'], 
+  origin: ['http://localhost:5173', 'https://maxxxxxai.netlify.app/'], 
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
