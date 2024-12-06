@@ -8,10 +8,9 @@ import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import { Camera } from 'lucide-react';
 import './App.css';
 
-const ImageCapture = ({ onImageCaptured, onImageQuestion }) => {
+const ImageCapture = ({ onImageCaptured }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
-  const [imageQuestion, setImageQuestion] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [stream, setStream] = useState(null);
@@ -62,19 +61,9 @@ const ImageCapture = ({ onImageCaptured, onImageQuestion }) => {
     }
 
     setShowCamera(false);
-  };
 
-  const handleImageAnalysis = () => {
-    if (capturedImage) {
-      if (onImageCaptured) {
-        onImageCaptured(capturedImage);
-      }
-      if (onImageQuestion && imageQuestion) {
-        onImageQuestion(capturedImage, imageQuestion);
-      }
-      // Reset states
-      setCapturedImage(null);
-      setImageQuestion('');
+    if (onImageCaptured) {
+      onImageCaptured(imageDataUrl);
     }
   };
 
@@ -119,69 +108,35 @@ const ImageCapture = ({ onImageCaptured, onImageQuestion }) => {
           />
           <div style={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            justifyContent: 'space-around',
             marginTop: '10px'
           }}>
-            <input 
-              type="text"
-              placeholder="Optional: Ask about the image"
-              value={imageQuestion}
-              onChange={(e) => setImageQuestion(e.target.value)}
+            <button 
+              onClick={capturePhoto}
               style={{
-                width: '100%',
-                marginBottom: '10px',
-                padding: '8px',
-                borderRadius: '4px'
+                padding: '8px 16px',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
               }}
-            />
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-around',
-              width: '100%'
-            }}>
-              <button 
-                onClick={capturePhoto}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Capture
-              </button>
-              <button 
-                onClick={cancelCapture}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              {capturedImage && (
-                <button 
-                  onClick={handleImageAnalysis}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#2196F3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Analyze
-                </button>
-              )}
-            </div>
+            >
+              Capture
+            </button>
+            <button 
+              onClick={cancelCapture}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -241,28 +196,24 @@ const App = () => {
     }
   }, []);
 
-  const handleImageAnalysis = async (photo, question = '') => {
+  const handleImageCapture = async (photo) => {
     setIsLoading(true);
     try {
       const response = await axios.post('https://realai-tt.onrender.com/analyze-image', {
-        image: photo,
-        question: question || 'Describe what you see in this image in detail.'
+        image: photo
       });
 
       const botMessage = {
         type: 'bot',
-        content: response.data.analysis || 'I could not analyze the image.'
+        content: response.data.analysis
       };
 
-      setMessages(prev => [...prev, {
-        type: 'user',
-        content: `[Image Analysis${question ? `: ${question}` : ''}]`
-      }, botMessage]);
+      setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error analyzing image:', error);
       const errorMessage = {
         type: 'bot',
-        content: 'Sorry, I could not analyze the image. Please try again.'
+        content: 'Sorry, I could not analyze the image.'
       };
       setMessages(prev => [...prev, errorMessage]);
     }
@@ -322,7 +273,7 @@ const App = () => {
       console.error('Error:', error);
       const errorMessage = {
         type: 'bot',
-        content: 'Sorry, I could not generate a response.'
+        content: 'Sorry.'
       };
       setMessages(prev => [...prev, errorMessage]);
     }
@@ -330,7 +281,68 @@ const App = () => {
     setIsLoading(false);
   };
 
-  // ... rest of the code remains the same as in the original file (CodeBlock, Message components, etc.)
+  const CodeBlock = ({ language, value }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+      navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+      <div className="code-block">
+        <div className="code-header">
+          <span className="language">{language}</span>
+          <button onClick={handleCopy} className="copy-button">
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+        <SyntaxHighlighter 
+          language={language} 
+          style={atomDark}
+          customStyle={{
+            margin: 0,
+            borderRadius: '0 0 4px 4px',
+            padding: '1rem'
+          }}
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
+    );
+  };
+
+  const Message = ({ message }) => {
+    const components = {
+      code({ node, inline, className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className || '');
+        return !inline && match ? (
+          <CodeBlock
+            language={match[1]}
+            value={String(children).replace(/\n$/, '')}
+          />
+        ) : (
+          <code className={className} {...props}>
+            {children}
+          </code>
+        );
+      }
+    };
+
+    return (
+      <div className={`message ${message.type}-message`}>
+        <div className="avatar">
+          {message.type === 'user' ? '👤' : '🤖'}
+        </div>
+        <div className="message-content">
+          <ReactMarkdown components={components}>
+            {message.content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="app">
@@ -394,10 +406,7 @@ const App = () => {
           className="message-input"
         />
 
-        <ImageCapture 
-          onImageCaptured={handleImageAnalysis} 
-          onImageQuestion={handleImageAnalysis}
-        />
+        <ImageCapture onImageCaptured={handleImageCapture} />
 
         <button
           type="button"
