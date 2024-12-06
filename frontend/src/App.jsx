@@ -391,7 +391,7 @@ const App = () => {
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="What You Want to Search"
+          placeholder="Search..."
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -413,7 +413,6 @@ const App = () => {
           onClick={toggleListening}
           className="voice-button"
           style={{
-            backgroundColor: '#1c1e25',
             border: 'none',
             cursor: 'pointer',
             marginRight: '5px',
