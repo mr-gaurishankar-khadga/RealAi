@@ -205,18 +205,18 @@ const App = () => {
 
 
 
-  
+
   const handleImageCapture = async (imageDataUrl) => {
     setIsLoading(true);
     try {
       // First, check if the server is available
       try {
-        await axios.get('http://localhost:1000/health');
+        await axios.get('https://realai-tt.onrender.com/health');
       } catch (error) {
-        throw new Error('Cannot connect to server. Please make sure the backend server is running.');
+        throw new Error('Sorry From gshankar.');
       }
   
-      const response = await axios.post('http://localhost:1000/analyze-image', {
+      const response = await axios.post('https://realai-tt.onrender.com/analyze-image', {
         image: imageDataUrl
       }, {
         headers: {
