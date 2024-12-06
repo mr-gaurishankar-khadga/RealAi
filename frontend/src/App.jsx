@@ -196,9 +196,26 @@ const App = () => {
     }
   }, []);
 
+
+
+
+
+
+
+
+
+
+  
   const handleImageCapture = async (imageDataUrl) => {
     setIsLoading(true);
     try {
+      // First, check if the server is available
+      try {
+        await axios.get('http://localhost:1000/health');
+      } catch (error) {
+        throw new Error('Cannot connect to server. Please make sure the backend server is running.');
+      }
+  
       const response = await axios.post('http://localhost:1000/analyze-image', {
         image: imageDataUrl
       }, {
@@ -206,6 +223,7 @@ const App = () => {
           'Content-Type': 'application/json',
         },
         maxBodyLength: Infinity,
+        timeout: 30000 // 30 second timeout
       });
   
       if (response.data.analysis) {
@@ -221,12 +239,16 @@ const App = () => {
       console.error('Error analyzing image:', error);
       const errorMessage = {
         type: 'bot',
-        content: 'Sorry, I encountered an error while analyzing the image. Please try again.'
+        content: `Error: ${error.message || 'Failed to analyze image. Please try again.'}`
       };
       setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
+
+
+
 
   const handleInputChange = () => {
     const currentTime = Date.now();

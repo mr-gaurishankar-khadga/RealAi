@@ -7,33 +7,67 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const app = express();
 const port = process.env.PORT || 1000;
 
+// More permissive CORS setup for development
+app.use(cors({
+  origin: '*', // During development, accept all origins
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Increase payload limits
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 const apiKey = process.env.GOOGLE_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Increase payload size limit for images
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+// Basic health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
-app.use(cors({
-  origin: ['https://maxxxxxai.netlify.app', 'http://localhost:5173'],
-}));
+app.post('/analyze-image', async (req, res) => {
+  try {
+    const { image } = req.body;
+    
+    if (!image) {
+      return res.status(400).json({ error: "Image data is required" });
+    }
 
-// Function to extract mime type from data URL
-function getMimeType(dataUrl) {
-  const matches = dataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/);
-  return matches && matches.length > 1 ? matches[1] : 'image/jpeg';
-}
+    if (!apiKey) {
+      return res.status(500).json({ error: "API key not configured" });
+    }
 
-// Function to process image data URL
-function processImageData(dataUrl) {
-  const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-  return {
-    mimeType: getMimeType(dataUrl),
-    data: base64Data
-  };
-}
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    const mimeType = image.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/)[1];
 
-// Text generation endpoint
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+
+    const prompt = "Please analyze this image and describe what you see in detail.";
+    
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      }
+    ]);
+
+    const response = await result.response;
+    const analysis = response.text();
+
+    return res.json({ analysis });
+  } catch (error) {
+    console.error("Error processing image:", error);
+    return res.status(500).json({ 
+      error: "Failed to analyze image", 
+      details: error.message 
+    });
+  }
+});
+
 app.post('/generate', async (req, res) => {
   const { prompt } = req.body;
 
@@ -53,52 +87,11 @@ app.post('/generate', async (req, res) => {
   }
 });
 
-// Image analysis endpoint
-app.post('/analyze-image', async (req, res) => {
-  try {
-    const { image } = req.body;
-    
-    if (!image) {
-      return res.status(400).json({ error: "Image data is required" });
-    }
-
-    // Process the image data
-    const processedImage = processImageData(image);
-    
-    // Initialize the vision model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
-
-    // Prepare the image part
-    const imagePart = {
-      inlineData: {
-        data: processedImage.data,
-        mimeType: processedImage.mimeType
-      }
-    };
-
-    // Prepare the prompt
-    const prompt = "Please analyze this image and describe what you see in detail.";
-
-    // Generate content
-    const result = await model.generateContent([prompt, imagePart]);
-    const response = await result.response;
-    const analysis = response.text();
-
-    return res.json({ analysis });
-  } catch (error) {
-    console.error("Error analyzing image:", error.message);
-    return res.status(500).json({ 
-      error: "Failed to analyze image", 
-      details: error.message 
-    });
-  }
-});
-
-// Error handling middleware
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error(err);
   res.status(500).json({ 
-    error: "Something broke!", 
+    error: "Internal server error", 
     details: err.message 
   });
 });
