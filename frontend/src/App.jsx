@@ -237,7 +237,39 @@ const App = () => {
 
 
 
+  
 
+  const handleImageCapture = async (imageDataUrl) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post('https://realai-tt.onrender.com/analyze-image', {
+        image: imageDataUrl
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        maxBodyLength: Infinity,
+      });
+  
+      if (response.data.analysis) {
+        const botMessage = {
+          type: 'bot',
+          content: response.data.analysis
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        throw new Error('No analysis received from the server');
+      }
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      const errorMessage = {
+        type: 'bot',
+        content: ' your image is selected '
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+    setIsLoading(false);
+  };
 
   const handleTextExtracted = (text) => {
     setInput(text.trim());
