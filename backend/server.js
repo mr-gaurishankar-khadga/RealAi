@@ -10,7 +10,6 @@ const port = process.env.PORT || 1000;
 const apiKey = process.env.GOOGLE_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Increase payload size limit for images
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
@@ -18,13 +17,11 @@ app.use(cors({
   origin: ['https://maxxxxxai.netlify.app', 'http://localhost:5173'],
 }));
 
-// Function to extract mime type from data URL
 function getMimeType(dataUrl) {
   const matches = dataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/);
   return matches && matches.length > 1 ? matches[1] : 'image/jpeg';
 }
 
-// Function to process image data URL
 function processImageData(dataUrl) {
   const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
   return {
@@ -33,7 +30,6 @@ function processImageData(dataUrl) {
   };
 }
 
-// Text generation endpoint
 app.post('/generate', async (req, res) => {
   const { prompt } = req.body;
 
@@ -42,7 +38,7 @@ app.post('/generate', async (req, res) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const generatedText = response.text();
@@ -76,10 +72,10 @@ app.post('/analyze-image', async (req, res) => {
       }
     };
 
-    // Prepare the prompt
+    
     const prompt = "Please analyze this image and describe what you see in detail.";
 
-    // Generate content
+    
     const result = await model.generateContent([prompt, imagePart]);
     const response = await result.response;
     const analysis = response.text();
@@ -94,7 +90,7 @@ app.post('/analyze-image', async (req, res) => {
   }
 });
 
-// Error handling middleware
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 

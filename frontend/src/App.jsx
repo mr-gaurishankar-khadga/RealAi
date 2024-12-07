@@ -6,11 +6,13 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { IoSendSharp } from "react-icons/io5";
 import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import { Camera } from 'lucide-react';
+import Tesseract from 'tesseract.js';
 import './App.css';
 
-const ImageCapture = ({ onImageCaptured }) => {
+const ImageCapture = ({ onImageCaptured, onTextExtracted }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [stream, setStream] = useState(null);
@@ -40,7 +42,27 @@ const ImageCapture = ({ onImageCaptured }) => {
     }
   };
 
-  const capturePhoto = () => {
+  const extractTextFromImage = async (imageDataUrl) => {
+    setIsProcessing(true);
+    try {
+      const result = await Tesseract.recognize(
+        imageDataUrl,
+        'eng',
+        { logger: m => console.log(m) }
+      );
+      
+      if (onTextExtracted) {
+        onTextExtracted(result.data.text);
+      }
+    } catch (error) {
+      console.error('Error extracting text:', error);
+      alert('Failed to extract text from image');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -62,6 +84,8 @@ const ImageCapture = ({ onImageCaptured }) => {
 
     setShowCamera(false);
 
+    // Process image for both OCR and analysis
+    await extractTextFromImage(imageDataUrl);
     if (onImageCaptured) {
       onImageCaptured(imageDataUrl);
     }
@@ -113,19 +137,21 @@ const ImageCapture = ({ onImageCaptured }) => {
           }}>
             <button 
               onClick={capturePhoto}
+              disabled={isProcessing}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#4CAF50',
+                backgroundColor: isProcessing ? '#888' : '#4CAF50',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: isProcessing ? 'not-allowed' : 'pointer'
               }}
             >
-              Capture
+              {isProcessing ? 'Processing...' : 'Capture'}
             </button>
             <button 
               onClick={cancelCapture}
+              disabled={isProcessing}
               style={{
                 padding: '8px 16px',
                 backgroundColor: '#f44336',
@@ -138,15 +164,25 @@ const ImageCapture = ({ onImageCaptured }) => {
               Cancel
             </button>
           </div>
+          {isProcessing && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: '10px',
+              color: 'white'
+            }}>
+              Extracting text from image...
+            </div>
+          )}
         </div>
       )}
       <button
         type="button"
         onClick={startCamera}
+        disabled={isProcessing}
         style={{
           backgroundColor: '#2d2d2d',
           border: 'none',
-          cursor: 'pointer',
+          cursor: isProcessing ? 'not-allowed' : 'pointer',
           marginRight: '5px',
           color: '#ffffff',
           padding: '8px'
@@ -168,7 +204,6 @@ const App = () => {
   const [animationDuration, setAnimationDuration] = useState(3);
   const lastTypedTime = useRef(Date.now());
 
-  // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
       const recognition = new window.webkitSpeechRecognition();
@@ -196,36 +231,16 @@ const App = () => {
     }
   }, []);
 
-  const handleImageCapture = async (imageDataUrl) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.post('http://localhost:1000/analyze-image', {
-        image: imageDataUrl
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        maxBodyLength: Infinity,
-      });
-  
-      if (response.data.analysis) {
-        const botMessage = {
-          type: 'bot',
-          content: response.data.analysis
-        };
-        setMessages(prev => [...prev, botMessage]);
-      } else {
-        throw new Error('No analysis received from the server');
-      }
-    } catch (error) {
-      console.error('Error analyzing image:', error);
-      const errorMessage = {
-        type: 'bot',
-        content: 'Sorry, I encountered an error while analyzing the image. Please try again.'
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    }
-    setIsLoading(false);
+
+
+
+
+
+
+
+
+  const handleTextExtracted = (text) => {
+    setInput(text.trim());
   };
 
   const handleInputChange = () => {
@@ -414,7 +429,10 @@ const App = () => {
           className="message-input"
         />
 
-        <ImageCapture onImageCaptured={handleImageCapture} />
+        <ImageCapture 
+          onImageCaptured={handleImageCapture}
+          onTextExtracted={handleTextExtracted}
+        />
 
         <button
           type="button"
