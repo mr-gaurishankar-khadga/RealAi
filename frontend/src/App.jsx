@@ -328,7 +328,7 @@ const App = () => {
       console.error('Error:', error);
       const errorMessage = {
         type: 'bot',
-        content: 'Sorry.'
+        content: 'Sorry...'
       };
       setMessages(prev => [...prev, errorMessage]);
     }
