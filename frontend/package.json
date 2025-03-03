@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@mui/icons-material": "^6.1.9",
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "axios": "^1.7.8",
     "dotenv": "^16.4.7",
     "gsharpi": "^2.0.1",

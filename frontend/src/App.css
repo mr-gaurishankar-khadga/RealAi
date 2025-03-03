@@ -251,7 +251,7 @@ body {
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-top: 250px;
-  margin-left: -300px;
+  margin-left: -350px;
   height: 50px;
   min-width: 700px;
   position: fixed;  
@@ -284,14 +284,17 @@ body {
 
 .message-input {
   flex: 1;
-  padding: 0.65rem;
+  /* padding: 0.2rem; */
+  padding: 10px;
+  padding-left: 30px;
+  padding-top: -10px;
   border-radius: 120px;
   resize: none;
   font-family: inherit;
   font-size: 1rem;
   min-height: 20px;
   max-height: 200px;
-  max-width: 500px;
+  max-width: 700px;
   outline: none;
 
   background: linear-gradient(90deg, #007bff, #ff007b, #00ff77, #007bff);
@@ -429,6 +432,7 @@ body {
 
 .sendicon {
   font-size: 30px;
+  border-radius: 12px;
 }
 
 @media (max-width: 768px) {

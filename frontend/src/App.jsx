@@ -7,192 +7,18 @@ import { IoSendSharp } from "react-icons/io5";
 import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import { Camera } from 'lucide-react';
 import Tesseract from 'tesseract.js';
+import ImageCapture from './ImageCapture';
 import './App.css';
+import ImageRecognization from './ImageRecognization';
+import Analyser from './Analyser';
 
-const ImageCapture = ({ onImageCaptured, onTextExtracted }) => {
-  const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [stream, setStream] = useState(null);
 
-  const startCamera = async () => {
-    try {
-      const constraints = {
-        video: { 
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          facingMode: 'environment' 
-        }
-      };
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      setStream(mediaStream);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
-      }
-      
-      setShowCamera(true);
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-      alert("Could not access camera. Please check permissions.");
-    }
-  };
 
-  const extractTextFromImage = async (imageDataUrl) => {
-    setIsProcessing(true);
-    try {
-      const result = await Tesseract.recognize(
-        imageDataUrl,
-        'eng',
-        { logger: m => console.log(m) }
-      );
-      
-      if (onTextExtracted) {
-        onTextExtracted(result.data.text);
-      }
-    } catch (error) {
-      console.error('Error extracting text:', error);
-      alert('Failed to extract text from image');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+<ImageCapture/>
 
-  const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
 
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const imageDataUrl = canvas.toDataURL('image/jpeg');
-    
-    setCapturedImage(imageDataUrl);
-
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-
-    setShowCamera(false);
-
-    // Process image for both OCR and analysis
-    await extractTextFromImage(imageDataUrl);
-    if (onImageCaptured) {
-      onImageCaptured(imageDataUrl);
-    }
-  };
-
-  const cancelCapture = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    
-    setShowCamera(false);
-    setCapturedImage(null);
-  };
-
-  return (
-    <>
-      {showCamera && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 1001,
-          backgroundColor: '#000',
-          padding: '20px',
-          borderRadius: '8px',
-          width: '90%',
-          maxWidth: '500px'
-        }}>
-          <video
-            ref={videoRef}
-            style={{
-              width: '100%',
-              maxHeight: '70vh',
-              borderRadius: '4px',
-              objectFit: 'contain'
-            }}
-            playsInline
-            autoPlay
-          />
-          <canvas 
-            ref={canvasRef} 
-            style={{ display: 'none' }} 
-          />
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            marginTop: '10px'
-          }}>
-            <button 
-              onClick={capturePhoto}
-              disabled={isProcessing}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: isProcessing ? '#888' : '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: isProcessing ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {isProcessing ? 'Processing...' : 'Capture'}
-            </button>
-            <button 
-              onClick={cancelCapture}
-              disabled={isProcessing}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#f44336',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-          {isProcessing && (
-            <div style={{
-              textAlign: 'center',
-              marginTop: '10px',
-              color: 'white'
-            }}>
-              Extracting text from image...
-            </div>
-          )}
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={startCamera}
-        disabled={isProcessing}
-        style={{
-          backgroundColor: '#2d2d2d',
-          border: 'none',
-          cursor: isProcessing ? 'not-allowed' : 'pointer',
-          marginRight: '5px',
-          color: '#ffffff',
-          padding: '8px'
-        }}
-      >
-        <Camera size={24} />
-      </button>
-    </>
-  );
-};
 
 const App = () => {
   const [messages, setMessages] = useState([]);
@@ -203,6 +29,8 @@ const App = () => {
   const recognitionRef = useRef(null);
   const [animationDuration, setAnimationDuration] = useState(3);
   const lastTypedTime = useRef(Date.now());
+
+
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
@@ -242,7 +70,7 @@ const App = () => {
   const handleImageCapture = async (imageDataUrl) => {
     setIsLoading(true);
     try {
-      const response = await axios.post('https://realai-tt.onrender.com/analyze-image', {
+      const response = await axios.post('http://localhost:8000/analyze-image', {
         image: imageDataUrl
       }, {
         headers: {
@@ -314,7 +142,7 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://realai-tt.onrender.com/generate', {
+      const response = await axios.post('http://localhost:8000/generate', {
         prompt: input
       });
 
@@ -335,6 +163,22 @@ const App = () => {
 
     setIsLoading(false);
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const CodeBlock = ({ language, value }) => {
     const [copied, setCopied] = useState(false);
@@ -368,6 +212,23 @@ const App = () => {
     );
   };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const Message = ({ message }) => {
     const components = {
       code({ node, inline, className, children, ...props }) {
@@ -388,7 +249,7 @@ const App = () => {
     return (
       <div className={`message ${message.type}-message`}>
         <div className="avatar">
-          {message.type === 'user' ? '👤' : '🤖'}
+          {message.type === 'user' ? '👤' : 'X'}
         </div>
         <div className="message-content">
           <ReactMarkdown components={components}>
@@ -398,6 +259,9 @@ const App = () => {
       </div>
     );
   };
+
+
+
 
   return (
     <div className="app">
@@ -421,6 +285,22 @@ const App = () => {
         <h1>gshankar ai</h1>
       </header>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       <main className="main" style={{margin:'0'}}>
         <div className="chat-container">
           {messages.map((message, index) => (
@@ -428,7 +308,7 @@ const App = () => {
           ))}
           {isLoading && (
             <div className="message bot-message">
-              <div className="avatar">🤖</div>
+              <div className="avatar">X</div>
               <div className="loading">
                 <div className="typing-indicator">
                   <span></span>
@@ -443,6 +323,7 @@ const App = () => {
       </main>
 
       <form onSubmit={handleSubmit} className="input-form">
+
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -461,10 +342,24 @@ const App = () => {
           className="message-input"
         />
 
-        <ImageCapture 
-          onImageCaptured={handleImageCapture}
-          onTextExtracted={handleTextExtracted}
-        />
+        <ImageCapture onImageCaptured={handleImageCapture} onTextExtracted={handleTextExtracted} />
+
+
+
+
+
+
+
+        
+
+      
+
+
+
+
+
+
+
 
         <button
           type="button"
@@ -473,22 +368,29 @@ const App = () => {
           style={{
             border: 'none',
             cursor: 'pointer',
-            marginRight: '5px',
+            marginRight: '-5px',
             color: isListening ? '#ff4444' : '#ffffff',
-            backgroundColor:'#2d2d2d'
+            backgroundColor:'none',
+            marginLeft:'-159px',
+            background:'transparent',
+            outline:'none'
+            
           }}
         >
-          {isListening ? <FaMicrophoneSlash size={24} /> : <FaMicrophone size={24} />}
+          
+          {isListening ? <FaMicrophoneSlash size={24} /> : <FaMicrophone size={24} color='black'/>}
         </button>
 
         <button 
           type="submit" 
           disabled={isLoading || !input.trim()}
           className="send-button"
+          style={{background:'',outline:'none',borderRadius:'120px',borderTopLeftRadius:'20px',borderBottomLeftRadius:'20px'}}
         >
-          <IoSendSharp className='sendicon'/>
+          <IoSendSharp className='sendicon' style={{marginTop:'-2px',color:'black'}}/>
         </button>
       </form>
+      {/* <Analyser/> */}
     </div>
   );
 };
